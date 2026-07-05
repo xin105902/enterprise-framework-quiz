@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f7f4ed">
+    <title>企业框架技术刷题</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Java企业框架技术</p>
+          <h1>刷题背题</h1>
+        </div>
+        <button id="resetBtn" class="icon-btn" type="button" title="重置当前进度" aria-label="重置当前进度">↻</button>
+      </header>
+
+      <section class="stats" aria-label="学习统计">
+        <div>
+          <span id="doneCount">0</span>
+          <small>已刷</small>
+        </div>
+        <div>
+          <span id="accuracyRate">0%</span>
+          <small>正确率</small>
+        </div>
+        <div>
+          <span id="wrongCount">0</span>
+          <small>错题</small>
+        </div>
+        <div>
+          <span id="favCount">0</span>
+          <small>收藏</small>
+        </div>
+      </section>
+
+      <nav class="tabs" aria-label="模式">
+        <button class="tab active" data-mode="practice" type="button">刷题</button>
+        <button class="tab" data-mode="memory" type="button">背题</button>
+        <button class="tab" data-mode="wrong" type="button">错题</button>
+        <button class="tab" data-mode="favorite" type="button">收藏</button>
+      </nav>
+
+      <section class="filters" aria-label="筛选">
+        <select id="typeFilter" aria-label="题型筛选"></select>
+        <button id="shuffleBtn" class="small-btn" type="button">随机</button>
+      </section>
+
+      <section class="progress-wrap" aria-label="当前进度">
+        <div class="progress-meta">
+          <span id="positionText">第 1 / 1 题</span>
+          <span id="typeText">单项选择题</span>
+        </div>
+        <div class="progress"><span id="progressBar"></span></div>
+      </section>
+
+      <article class="card">
+        <div class="card-head">
+          <span id="questionBadge" class="badge">单选</span>
+          <button id="favoriteBtn" class="icon-btn" type="button" title="收藏本题" aria-label="收藏本题">☆</button>
+        </div>
+        <pre id="questionText" class="question"></pre>
+        <div id="options" class="options"></div>
+        <div id="answerPanel" class="answer-panel" hidden>
+          <span>答案</span>
+          <pre id="answerText"></pre>
+        </div>
+      </article>
+
+      <footer class="actions">
+        <button id="prevBtn" class="secondary" type="button">上一题</button>
+        <button id="showAnswerBtn" class="primary" type="button">看答案</button>
+        <button id="nextBtn" class="secondary" type="button">下一题</button>
+      </footer>
+    </main>
+
+    <script src="questions.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
