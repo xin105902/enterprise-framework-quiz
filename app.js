@@ -14,10 +14,12 @@ const typeNames = {
   blank: "填空题",
   short: "简答题",
   coding: "编程题",
+  essay: "大题",
 };
 
 const els = {
   tabs: [...document.querySelectorAll(".tab")],
+  subjectFilter: document.querySelector("#subjectFilter"),
   typeFilter: document.querySelector("#typeFilter"),
   shuffleBtn: document.querySelector("#shuffleBtn"),
   resetBtn: document.querySelector("#resetBtn"),
@@ -42,6 +44,7 @@ const els = {
 init();
 
 function init() {
+  renderSubjectFilter();
   renderTypeFilter();
   bindEvents();
   rebuildList();
@@ -50,6 +53,7 @@ function init() {
 function defaultState() {
   return {
     mode: "practice",
+    subject: bank.subjects?.[0]?.id || "enterprise",
     type: "all",
     order: bank.questions.map((item) => item.id),
     answers: {},
@@ -71,10 +75,26 @@ function saveState() {
 }
 
 function renderTypeFilter() {
+  const availableTypes = new Set(
+    bank.questions
+      .filter((item) => item.subject === state.subject)
+      .map((item) => item.type),
+  );
   els.typeFilter.innerHTML = Object.entries(typeNames)
+    .filter(([key]) => key === "all" || availableTypes.has(key))
     .map(([key, name]) => `<option value="${key}">${name}</option>`)
     .join("");
+  if (![...els.typeFilter.options].some((option) => option.value === state.type)) {
+    state.type = "all";
+  }
   els.typeFilter.value = state.type;
+}
+
+function renderSubjectFilter() {
+  els.subjectFilter.innerHTML = (bank.subjects || [])
+    .map((subject) => `<option value="${subject.id}">${subject.name}</option>`)
+    .join("");
+  els.subjectFilter.value = state.subject;
 }
 
 function bindEvents() {
@@ -90,6 +110,16 @@ function bindEvents() {
   els.typeFilter.addEventListener("change", () => {
     state.type = els.typeFilter.value;
     currentIndex = 0;
+    rebuildList();
+  });
+
+  els.subjectFilter.addEventListener("change", () => {
+    state.subject = els.subjectFilter.value;
+    state.type = "all";
+    currentIndex = 0;
+    reveal = state.mode !== "practice";
+    renderTypeFilter();
+    saveState();
     rebuildList();
   });
 
@@ -133,6 +163,7 @@ function rebuildList() {
   const missing = bank.questions.filter((item) => !state.order.includes(item.id));
   let list = [...ordered, ...missing];
 
+  list = list.filter((item) => item.subject === state.subject);
   if (state.type !== "all") {
     list = list.filter((item) => item.type === state.type);
   }
@@ -146,6 +177,7 @@ function rebuildList() {
   currentList = list;
   if (currentIndex >= currentList.length) currentIndex = Math.max(0, currentList.length - 1);
   els.tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.mode === state.mode));
+  renderTypeFilter();
   reveal = state.mode !== "practice" || reveal;
   render();
 }
@@ -254,13 +286,16 @@ function move(step) {
 }
 
 function renderStats() {
-  const answers = Object.values(state.answers);
+  const subjectIds = new Set(bank.questions.filter((item) => item.subject === state.subject).map((item) => item.id));
+  const answers = Object.entries(state.answers)
+    .filter(([id]) => subjectIds.has(id))
+    .map(([, answer]) => answer);
   const done = answers.length;
   const correct = answers.filter((item) => item.correct).length;
   els.doneCount.textContent = done;
   els.accuracyRate.textContent = done ? `${Math.round((correct / done) * 100)}%` : "0%";
-  els.wrongCount.textContent = state.wrong.length;
-  els.favCount.textContent = state.favorite.length;
+  els.wrongCount.textContent = state.wrong.filter((id) => subjectIds.has(id)).length;
+  els.favCount.textContent = state.favorite.filter((id) => subjectIds.has(id)).length;
 }
 
 function answerWithOptionText(item) {
