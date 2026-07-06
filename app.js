@@ -290,16 +290,46 @@ function renderOptions(item, answered) {
     button.addEventListener("click", () => chooseOption(item, option.key));
     els.options.appendChild(button);
   }
+
+  if (item.type === "multiple") {
+    const submit = document.createElement("button");
+    submit.className = "multi-submit";
+    submit.type = "button";
+    submit.textContent = "提交答案";
+    submit.addEventListener("click", () => submitMultiple(item));
+    els.options.appendChild(submit);
+  }
 }
 
 function chooseOption(item, key) {
+  clearAutoNext();
   const previous = state.answers[item.id]?.value || "";
   let value = key;
   if (item.type === "multiple") {
     const set = new Set(previous.split("").filter(Boolean));
     set.has(key) ? set.delete(key) : set.add(key);
     value = [...set].sort().join("");
+    state.answers[item.id] = { value, correct: false, pending: true };
+    reveal = false;
+    saveState();
+    render();
+    return;
   }
+  const correct = normalizeAnswer(value) === normalizeAnswer(item.answer);
+  state.answers[item.id] = { value, correct };
+  syncWrong(item.id, correct);
+  reveal = true;
+  saveState();
+  render();
+  if (correct && state.mode === "practice") {
+    scheduleAutoNext();
+  }
+}
+
+function submitMultiple(item) {
+  clearAutoNext();
+  const value = state.answers[item.id]?.value || "";
+  if (!value) return;
   const correct = normalizeAnswer(value) === normalizeAnswer(item.answer);
   state.answers[item.id] = { value, correct };
   syncWrong(item.id, correct);
@@ -324,6 +354,7 @@ function markSelf(item, self) {
 }
 
 function submitBlank(item, value) {
+  clearAutoNext();
   const trimmed = value.trim();
   if (!trimmed) return;
   const correct = isBlankCorrect(item, trimmed);
@@ -402,7 +433,8 @@ function renderStats() {
   const subjectIds = new Set(bank.questions.filter((item) => item.subject === state.subject).map((item) => item.id));
   const answers = Object.entries(state.answers)
     .filter(([id]) => subjectIds.has(id))
-    .map(([, answer]) => answer);
+    .map(([, answer]) => answer)
+    .filter((answer) => !answer.pending);
   const done = answers.length;
   const correct = answers.filter((item) => item.correct).length;
   els.doneCount.textContent = done;

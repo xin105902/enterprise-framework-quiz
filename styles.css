@@ -329,6 +329,16 @@ select {
   font-weight: 800;
 }
 
+.multi-submit {
+  height: 48px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font: inherit;
+  font-weight: 800;
+}
+
 .actions {
   position: fixed;
   right: 0;
