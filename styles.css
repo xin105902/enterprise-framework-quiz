@@ -290,6 +290,45 @@ select {
   font-size: 15px;
 }
 
+.blank-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+.blank-input,
+.blank-submit {
+  height: 48px;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.blank-input {
+  min-width: 0;
+  border: 1px solid var(--line);
+  padding: 0 12px;
+  background: white;
+  color: var(--ink);
+}
+
+.blank-input.correct {
+  border-color: var(--good);
+  background: #edf8f1;
+}
+
+.blank-input.wrong {
+  border-color: var(--bad);
+  background: #fff0ee;
+}
+
+.blank-submit {
+  border: 1px solid var(--accent);
+  padding: 0 16px;
+  background: var(--accent);
+  color: white;
+  font-weight: 800;
+}
+
 .actions {
   position: fixed;
   right: 0;
@@ -331,6 +370,10 @@ select {
 
 @media (max-width: 420px) {
   .subject-switch {
+    grid-template-columns: 1fr;
+  }
+
+  .blank-form {
     grid-template-columns: 1fr;
   }
 }

@@ -245,6 +245,22 @@ function render() {
 
 function renderOptions(item, answered) {
   els.options.innerHTML = "";
+  if (item.type === "blank") {
+    const value = answered?.value || "";
+    const status = answered ? (answered.correct ? "correct" : "wrong") : "";
+    els.options.innerHTML = `
+      <form class="blank-form" id="blankForm">
+        <input class="blank-input ${status}" id="blankInput" type="text" value="${escapeHtml(value)}" placeholder="输入填空答案" autocomplete="off">
+        <button class="blank-submit" type="submit">提交</button>
+      </form>
+    `;
+    els.options.querySelector("#blankForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      submitBlank(item, els.options.querySelector("#blankInput").value);
+    });
+    return;
+  }
+
   if (!item.options.length) {
     const remembered = answered?.self === "remembered";
     const forgot = answered?.self === "forgot";
@@ -307,6 +323,49 @@ function markSelf(item, self) {
   }
 }
 
+function submitBlank(item, value) {
+  const trimmed = value.trim();
+  if (!trimmed) return;
+  const correct = isBlankCorrect(item, trimmed);
+  state.answers[item.id] = { value: trimmed, correct };
+  syncWrong(item.id, correct);
+  reveal = true;
+  saveState();
+  render();
+  if (correct && state.mode === "practice") {
+    scheduleAutoNext();
+  }
+}
+
+function isBlankCorrect(item, value) {
+  const expected = expectedBlankAnswer(item);
+  const user = normalizeTextAnswer(value);
+  const target = normalizeTextAnswer(expected);
+  const full = normalizeTextAnswer(item.answer);
+  return user === target || user === full || (user.length >= 4 && full.includes(user));
+}
+
+function expectedBlankAnswer(item) {
+  const answer = item.answer.trim();
+  const marker = "【填空】";
+  if (!item.question.includes(marker)) return answer;
+
+  const parts = item.question.split(marker);
+  if (parts.length !== 2) return answer;
+
+  const prefix = parts[0].trim();
+  const suffix = parts[1].trim();
+  let expected = answer;
+  if (prefix && expected.startsWith(prefix)) {
+    expected = expected.slice(prefix.length);
+  }
+  if (suffix && expected.endsWith(suffix)) {
+    expected = expected.slice(0, -suffix.length);
+  }
+  expected = expected.replace(/^[\s，,。；;：:]+|[\s，,。；;：:]+$/g, "");
+  return expected || answer;
+}
+
 function syncWrong(id, correct) {
   const index = state.wrong.indexOf(id);
   if (!correct && index === -1) state.wrong.push(id);
@@ -366,6 +425,12 @@ function answerWithOptionText(item) {
 
 function normalizeAnswer(value) {
   return String(value).replace(/\s/g, "").split("").sort().join("");
+}
+
+function normalizeTextAnswer(value) {
+  return String(value)
+    .toLowerCase()
+    .replace(/[\s　`"'“”‘’（）()\[\]【】、，,。.;；:：+\-_/\\]/g, "");
 }
 
 function toggleInArray(array, value) {
