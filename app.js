@@ -5,6 +5,7 @@ const state = loadState();
 let currentList = [];
 let currentIndex = 0;
 let reveal = false;
+let autoNextTimer = null;
 
 const typeNames = {
   all: "全部题型",
@@ -110,6 +111,7 @@ function renderSubjectFilter() {
 function bindEvents() {
   els.tabs.forEach((tab) => {
     tab.addEventListener("click", () => {
+      clearAutoNext();
       state.mode = tab.dataset.mode;
       currentIndex = 0;
       reveal = state.mode !== "practice";
@@ -118,6 +120,7 @@ function bindEvents() {
   });
 
   els.typeFilter.addEventListener("change", () => {
+    clearAutoNext();
     state.type = els.typeFilter.value;
     currentIndex = 0;
     rebuildList();
@@ -136,6 +139,7 @@ function bindEvents() {
   }
 
   els.shuffleBtn.addEventListener("click", () => {
+    clearAutoNext();
     state.order = shuffle([...currentList.map((item) => item.id)]);
     currentIndex = 0;
     reveal = false;
@@ -163,12 +167,14 @@ function bindEvents() {
   els.prevBtn.addEventListener("click", () => move(-1));
   els.nextBtn.addEventListener("click", () => move(1));
   els.showAnswerBtn.addEventListener("click", () => {
+    clearAutoNext();
     reveal = !reveal;
     render();
   });
 }
 
 function switchSubject(subject) {
+  clearAutoNext();
   state.subject = subject;
   state.type = "all";
   currentIndex = 0;
@@ -281,9 +287,12 @@ function chooseOption(item, key) {
   const correct = normalizeAnswer(value) === normalizeAnswer(item.answer);
   state.answers[item.id] = { value, correct };
   syncWrong(item.id, correct);
-  reveal = item.type !== "multiple" || correct;
+  reveal = true;
   saveState();
   render();
+  if (correct && state.mode === "practice") {
+    scheduleAutoNext();
+  }
 }
 
 function markSelf(item, self) {
@@ -293,6 +302,9 @@ function markSelf(item, self) {
   reveal = true;
   saveState();
   render();
+  if (correct && state.mode === "practice") {
+    scheduleAutoNext();
+  }
 }
 
 function syncWrong(id, correct) {
@@ -303,9 +315,28 @@ function syncWrong(id, correct) {
 
 function move(step) {
   if (!currentList.length) return;
+  clearAutoNext();
   currentIndex = (currentIndex + step + currentList.length) % currentList.length;
   reveal = state.mode !== "practice";
   render();
+}
+
+function scheduleAutoNext() {
+  clearAutoNext();
+  autoNextTimer = window.setTimeout(() => {
+    autoNextTimer = null;
+    if (currentList.length > 1) {
+      currentIndex = (currentIndex + 1) % currentList.length;
+      reveal = false;
+      render();
+    }
+  }, 550);
+}
+
+function clearAutoNext() {
+  if (!autoNextTimer) return;
+  window.clearTimeout(autoNextTimer);
+  autoNextTimer = null;
 }
 
 function renderStats() {
