@@ -91,6 +91,14 @@ function renderTypeFilter() {
 }
 
 function renderSubjectFilter() {
+  if (els.subjectFilter.tagName === "SELECT") {
+    els.subjectFilter.innerHTML = (bank.subjects || [])
+      .map((subject) => `<option value="${subject.id}">${subject.name}</option>`)
+      .join("");
+    els.subjectFilter.value = state.subject;
+    return;
+  }
+
   els.subjectFilter.innerHTML = (bank.subjects || [])
     .map((subject) => {
       const active = subject.id === state.subject ? " active" : "";
@@ -115,18 +123,17 @@ function bindEvents() {
     rebuildList();
   });
 
+  if (els.subjectFilter.tagName === "SELECT") {
+    els.subjectFilter.addEventListener("change", () => {
+      switchSubject(els.subjectFilter.value);
+    });
+  } else {
   els.subjectFilter.addEventListener("click", (event) => {
     const button = event.target.closest("[data-subject]");
     if (!button || button.dataset.subject === state.subject) return;
-    state.subject = button.dataset.subject;
-    state.type = "all";
-    currentIndex = 0;
-    reveal = state.mode !== "practice";
-    renderSubjectFilter();
-    renderTypeFilter();
-    saveState();
-    rebuildList();
+    switchSubject(button.dataset.subject);
   });
+  }
 
   els.shuffleBtn.addEventListener("click", () => {
     state.order = shuffle([...currentList.map((item) => item.id)]);
@@ -159,6 +166,17 @@ function bindEvents() {
     reveal = !reveal;
     render();
   });
+}
+
+function switchSubject(subject) {
+  state.subject = subject;
+  state.type = "all";
+  currentIndex = 0;
+  reveal = state.mode !== "practice";
+  renderSubjectFilter();
+  renderTypeFilter();
+  saveState();
+  rebuildList();
 }
 
 function rebuildList() {
