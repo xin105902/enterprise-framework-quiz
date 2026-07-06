@@ -119,9 +119,32 @@ h1 {
 
 .filters {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  grid-template-columns: 1fr auto;
   gap: 8px;
   margin-top: 10px;
+}
+
+.subject-switch {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: 8px;
+}
+
+.subject-btn {
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.subject-btn.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
 }
 
 select {
@@ -307,11 +330,7 @@ select {
 }
 
 @media (max-width: 420px) {
-  .filters {
-    grid-template-columns: 1fr auto;
-  }
-
-  #subjectFilter {
-    grid-column: 1 / -1;
+  .subject-switch {
+    grid-template-columns: 1fr;
   }
 }

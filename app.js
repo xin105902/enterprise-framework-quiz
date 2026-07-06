@@ -92,9 +92,11 @@ function renderTypeFilter() {
 
 function renderSubjectFilter() {
   els.subjectFilter.innerHTML = (bank.subjects || [])
-    .map((subject) => `<option value="${subject.id}">${subject.name}</option>`)
+    .map((subject) => {
+      const active = subject.id === state.subject ? " active" : "";
+      return `<button class="subject-btn${active}" data-subject="${subject.id}" type="button">${subject.name}</button>`;
+    })
     .join("");
-  els.subjectFilter.value = state.subject;
 }
 
 function bindEvents() {
@@ -113,11 +115,14 @@ function bindEvents() {
     rebuildList();
   });
 
-  els.subjectFilter.addEventListener("change", () => {
-    state.subject = els.subjectFilter.value;
+  els.subjectFilter.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-subject]");
+    if (!button || button.dataset.subject === state.subject) return;
+    state.subject = button.dataset.subject;
     state.type = "all";
     currentIndex = 0;
     reveal = state.mode !== "practice";
+    renderSubjectFilter();
     renderTypeFilter();
     saveState();
     rebuildList();
